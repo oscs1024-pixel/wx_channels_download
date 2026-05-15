@@ -674,6 +674,30 @@ var WXU = (() => {
       hide() {},
       toggle() {},
       /**
+       * 构建下载任务请求体
+       * @param {FeedProfile} feed
+       * @param {object} opt 配置
+       * @param {string} [opt.spec] 规格
+       * @param {string} [opt.suffix] 后缀
+       */
+      build_task_body(feed, opt = {}) {
+        return {
+          id: feed.id,
+          url: feed.url,
+          title: feed.title,
+          key: Number(feed.key),
+          spec: opt.spec || "original",
+          suffix: opt.suffix,
+          source_url: WXRouter.buildJumpUrl(feed),
+          type: feed.type,
+          nonce_id: feed.nonce_id,
+          cover_url: feed.cover_url,
+          contact: feed.contact,
+          spec_list: feed.spec,
+          files: feed.files,
+        };
+      },
+      /**
        * 提交下载任务
        * @param {FeedProfile} feed
        * @param {object} opt 配置
@@ -682,58 +706,11 @@ var WXU = (() => {
        */
       async create(feed, opt = {}) {
         console.log("[downloader.create]create", feed);
-        var spec = (() => {
-          if (opt.spec) {
-            return opt.spec;
-          }
-          if (WXU.config.defaultHighest || opt.spec === null) {
-            return "original";
-          }
-          if (feed.spec[0]) {
-            return feed.spec[0].fileFormat;
-          }
-          return "original";
-        })();
-        var filename = WXU.build_filename(
-          feed,
-          spec,
-          WXU.config.downloadFilenameTemplate,
-        );
-        if (!filename) {
-          return [new Error("filename 为空"), null];
-        }
-        if (feed.type === "picture") {
-          opt.suffix = ".zip";
-          feed.url = `zip://weixin.qq.com?files=${encodeURIComponent(
-            JSON.stringify(
-              feed.files.map((f, idx) => {
-                return {
-                  url: f.url,
-                  filename: `${idx + 1}.jpg`,
-                };
-              }),
-            ),
-          )}`;
-          console.log("[]feed.url", feed.url);
-        }
-        if (opt.suffix !== ".jpg") {
-          feed.url = feed.url + "&X-snsvideoflag=" + spec;
-        }
-        // console.log("[downloader.create]before WXU.request");
         var [err, data] = await WXU.request({
           method: "POST",
           url:
             APIServerProtocol + "://" + FakeAPIServerAddr + "/api/task/create",
-          body: {
-            id: feed.id,
-            url: feed.url,
-            title: feed.title,
-            filename: filename,
-            key: Number(feed.key),
-            spec,
-            suffix: opt.suffix,
-            source_url: WXRouter.buildJumpUrl(feed),
-          },
+          body: this.build_task_body(feed, opt),
         });
         WXU.downloader.show();
         if (err) {
@@ -751,56 +728,8 @@ var WXU = (() => {
        */
       async create_batch(feeds, opt = {}) {
         var body = {
-          feeds: [],
+          feeds: feeds.map((feed) => this.build_task_body(feed, opt)),
         };
-        for (let i = 0; i < feeds.length; i += 1) {
-          var feed = feeds[i];
-          var spec = (() => {
-            if (opt.spec) {
-              return opt.spec;
-            }
-            if (WXU.config.defaultHighest || opt.spec === null) {
-              return "original";
-            }
-            if (feed.spec[0]) {
-              return feed.spec[0].fileFormat;
-            }
-            return "original";
-          })();
-          var filename = WXU.build_filename(
-            feed,
-            spec,
-            WXU.config.downloadFilenameTemplate,
-          );
-          if (filename) {
-            if (feed.type === "picture") {
-              opt.suffix = ".zip";
-              feed.url = `zip://weixin.qq.com?files=${encodeURIComponent(
-                JSON.stringify(
-                  feed.files.map((f, idx) => {
-                    return {
-                      url: f.url,
-                      filename: `${idx + 1}.jpg`,
-                    };
-                  }),
-                ),
-              )}`;
-            }
-            if (opt.suffix !== ".jpg") {
-              feed.url = feed.url + "&X-snsvideoflag=" + spec;
-            }
-            body.feeds.push({
-              id: feed.id,
-              url: feed.url,
-              title: feed.title,
-              key: Number(feed.key),
-              filename,
-              spec,
-              suffix: opt.suffix,
-              source_url: WXRouter.buildJumpUrl(feed),
-            });
-          }
-        }
         WXU.downloader.show();
         var [err, data] = await WXU.request({
           method: "POST",

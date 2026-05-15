@@ -2,8 +2,8 @@
   "openapi": "3.0.0",
   "info": {
     "title": "WeChat Channels Download API",
-    "version": "v260324",
-    "description": "可以通过 HTTP 请求来调用下载器的 API，现在提供了以下几类接口：\n\n- 视频号相关\n- 公众号相关\n- 下载器相关"
+    "version": "v260330",
+    "description": "可以通过 HTTP 请求来调用下载器的 API，现在提供了以下几类接口：\n\n- 视频号相关\n- 公众号相关\n- 下载器相关\n- 下载任务相关\n\n**注意**：接口文档已拆分为多个子文件：\n- `channels.json` - 视频号接口\n- `mp.json` - 公众号接口\n- `task.json` - 下载器接口\n- `download_task.json` - 下载任务接口（/api/download_task/*）\n- `filehelper.json` - 文件传输助手接口\n- `media.json` - 媒体播放接口"
   },
   "servers": [
     {
@@ -26,7 +26,7 @@
     },
     {
       "name": "下载任务",
-      "description": "兼容 wx_channels_api 的下载任务接口（/download_task/*），底层复用本项目的下载器与 download_task 表"
+      "description": "兼容 wx_channels_api 的下载任务接口（/api/download_task/*），底层复用本项目的下载器与 download_task 表"
     },
     {
       "name": "平台",
@@ -39,6 +39,14 @@
     {
       "name": "内容",
       "description": "兼容 wx_channels_api 的内容相关接口（/video/*、/browse_history/*）"
+    },
+    {
+      "name": "文件传输助手",
+      "description": "文件传输助手相关接口（仅本地模式可用）"
+    },
+    {
+      "name": "媒体",
+      "description": "媒体文件预览与播放接口"
     }
   ],
   "paths": {
